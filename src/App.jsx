@@ -4,11 +4,22 @@ import confetti from "canvas-confetti";
 import { TURNS } from "../constants";
 import { checkWinnerFrom, checkEndGame } from "./logic/board";
 import { WinnerModal } from "./components/WinnerModal";
+import { resetGameStorage, saveGameStorage } from "./logic/storage";
 
 function App() {
   // use states for save the change wiht thw app
-  const [board, setBoard] = useState(Array(9).fill(null));
-  const [turn, setTurn] = useState(TURNS.X);
+  // can use the callbacks function to initialize the state with the processed information
+  const [board, setBoard] = useState(() => {
+    const boardFromLocalStorage = window.localStorage.getItem("board");
+    return boardFromLocalStorage
+      ? JSON.parse(boardFromLocalStorage)
+      : Array(9).fill(null);
+  });
+  const [turn, setTurn] = useState(() => {
+    const turnFromLocalStorage = window.localStorage.getItem("turn");
+    if (turnFromLocalStorage) return turnFromLocalStorage;
+    return TURNS.X;
+  });
   const [winner, setWinner] = useState(null);
 
   const updateBoard = (index) => {
@@ -22,6 +33,7 @@ function App() {
     setBoard(newBoard);
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X;
     setTurn(newTurn);
+    saveGameStorage(newBoard, newTurn);
     // se revisa si hay un ganadador para que el juego no continue
     const newWinner = checkWinnerFrom(newBoard);
     if (newWinner) {
@@ -41,6 +53,8 @@ function App() {
     setBoard(Array(9).fill(null));
     setTurn(TURNS.X);
     setWinner(null);
+    // to remove the local storage data must manually remove these
+    resetGameStorage();
   };
 
   return (
